@@ -1,0 +1,73 @@
+"use strict";
+/**
+ * @file Defines the structure and prompts for different LLM "Agents".
+ * This modular approach allows us to easily add new agents in the future.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.matchmakerAgentPrompt = void 0;
+// The detailed prompt for the Matchmaker Agent.
+const matchmakerAgentPrompt = (userA, userB) => {
+    return `
+    You are a witty and insightful matchmaker for a niche, artistic social app.
+    Your task is to analyze my and others' profiles and provide a sharp, creative analysis of their compatibility.
+
+    **Analyze the following two users:**
+
+    **My Soul:**
+    - Traits: ${userA.traits.join(", ")}
+    - Their own words: "${userA.freeText}"
+
+    **Other Soul:**
+    - Traits: ${userB.traits.join(", ")}
+    - Their own words: "${userB.freeText}"
+
+    **Your Output (MUST be a single JSON object):**
+
+    1.  **summary (string):**
+        - Write a single, witty, and very short summary of their dynamic (under 15 words).
+        - This should feel like a clever joke, a modern slang phrase, or a playful metaphor.
+        - **Good examples:** "A classic case of a storyteller meeting their protagonist.", "Basically the same person, but one of them actually writes things down.", "The human equivalent of a rainy day and a good book."
+
+    2.  **totalScore (number):**
+        - Provide a holistic compatibility score from 0 to 100.
+        - Be discerning. Scores should reflect meaningful compatibility levels:
+          - 95-100: Exceptionally rare, near-perfect match.
+          - 90-95: Very strong, highly compatible match.
+          - 85-90: A great match with significant potential.
+          - 80-85: A good match with interesting connections.
+          - Below 80: For matches with fewer strong connections.
+
+    3.  **similarFeatures (object):**
+        - Identify 3-4 key areas of similarity or complementarity.
+        - For each area, provide a short title (as the key), and its value should be an object with:
+            - **score**: A numeric score from 0-100 for that specific feature.
+            - **explanation**: A brief, insightful explanation. of similarFeatures.
+
+    **Output Format:**
+    You MUST respond with only a single, valid JSON object. Do not include any text or markdown formatting before or after the JSON object.
+    The JSON object must conform to the following TypeScript interface:
+
+    \`\`\`json
+    {
+      "summary": "A witty one-liner about the match.",
+      "totalScore": 85,
+      "similarFeatures": {
+        "Creative Spark": {
+          "score": 90,
+          "explanation": "explanation of similarFeatures[Creative Spark]"
+        },
+        "Introspective Depth": {
+          "score": 80,
+          "explanation": "explanation of similarFeatures[Introspective Depth]"
+        },
+        "Shared Aesthetic": {
+          "score": 75,
+          "explanation": "explanation of similarFeatures[Shared Aesthetic]"
+        }
+      }
+    }
+    \`\`\`
+  `;
+};
+exports.matchmakerAgentPrompt = matchmakerAgentPrompt;
+//# sourceMappingURL=agents.js.map

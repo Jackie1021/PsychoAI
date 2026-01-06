@@ -1,0 +1,13 @@
+{
+  "name": "seed-scripts",
+  "version": "1.0.0",
+  "scripts": {
+    "seed": "node seed_emulator.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

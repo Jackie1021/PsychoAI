@@ -1,0 +1,298 @@
+#!/usr/bin/env node
+/**
+ * Seed script for Firebase Emulator
+ * Creates test users and posts for development
+ */
+
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin with emulator settings
+process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
+process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9098';
+
+admin.initializeApp({
+  projectId: 'studio-291983403-af613',
+});
+
+const db = admin.firestore();
+const auth = admin.auth();
+
+// Test users data with diverse mental health traits (aligned with app definitions)
+const TEST_USERS = [
+  {
+    email: 'alice@test.com',
+    password: 'test123456',
+    username: 'Alice',
+    traits: ['Anxiety', 'OCD', 'PTSD'],
+    freeText: 'Working through anxiety with creative outlets and support.',
+    bio: 'Finding strength through creativity'
+  },
+  {
+    email: 'bob@test.com',
+    password: 'test123456',
+    username: 'Bob',
+    traits: ['Depression', 'ADHD'],
+    freeText: 'Managing depression while staying productive and connected.',
+    bio: 'Building resilience day by day'
+  },
+  {
+    email: 'charlie@test.com',
+    password: 'test123456',
+    username: 'Charlie',
+    traits: ['Bipolar', 'Anxiety'],
+    freeText: 'Navigating bipolar experiences with mindfulness and community.',
+    bio: 'Seeking balance and understanding'
+  },
+  {
+    email: 'diana@test.com',
+    password: 'test123456',
+    username: 'Diana',
+    traits: ['ADHD', 'Autism'],
+    freeText: 'Embracing neurodiversity and finding my unique path.',
+    bio: 'Celebrating different ways of thinking'
+  },
+  {
+    email: 'eve@test.com',
+    password: 'test123456',
+    username: 'Eve',
+    traits: ['PTSD', 'BPD'],
+    freeText: 'Healing from trauma while building meaningful connections.',
+    bio: 'Growing through vulnerability'
+  },
+  {
+    email: 'frank@test.com',
+    password: 'test123456',
+    username: 'Frank',
+    traits: ['OCD', 'NPD'],
+    freeText: 'Managing OCD while exploring self-awareness and growth.',
+    bio: 'Committed to personal development'
+  }
+];
+
+// Sample posts content
+const SAMPLE_POSTS = [
+  'Just had the most vivid dream about flying over a crystal city...',
+  'Today I discovered a new sound in my morning coffee ritual ☕',
+  'Working on a new world map for my fantasy story!',
+  'The night sky inspires so many stories...',
+  'Sketching my mood today: peaceful blues and gentle greens',
+  'Late night writing session complete! 1000 words down.',
+  'Found the perfect background ambience for creative work',
+  'My ritual for creativity: tea, soft music, and an empty page',
+  'Dreams are windows to other worlds ✨',
+  'Observing the small details today made everything magical',
+];
+
+async function clearExistingData() {
+  console.log('🧹 Clearing existing test data...');
+  
+  // Clear users
+  const users = await db.collection('users').get();
+  const userBatch = db.batch();
+  users.docs.forEach(doc => userBatch.delete(doc.ref));
+  await userBatch.commit();
+  
+  // Clear posts
+  const posts = await db.collection('posts').get();
+  const postBatch = db.batch();
+  posts.docs.forEach(doc => postBatch.delete(doc.ref));
+  await postBatch.commit();
+  
+  // Clear auth users
+  const authUsers = await auth.listUsers();
+  for (const user of authUsers.users) {
+    await auth.deleteUser(user.uid);
+  }
+  
+  console.log('✅ Cleared existing data');
+}
+
+async function createTestUsers() {
+  console.log('👥 Creating test users...');
+  const createdUsers: Array<{uid: string; username: string; email: string}> = [];
+  
+  for (const userData of TEST_USERS) {
+    try {
+      // Create auth user
+      const authUser = await auth.createUser({
+        email: userData.email,
+        password: userData.password,
+        displayName: userData.username,
+      });
+      
+      // Create Firestore user document
+      const userProfile = {
+        uid: authUser.uid,
+        username: userData.username,
+        name: userData.username, // For chat compatibility
+        email: userData.email,
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}`,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}`, // For chat compatibility
+        bio: userData.bio,
+        traits: userData.traits,
+        freeText: userData.freeText,
+        lastActive: admin.firestore.FieldValue.serverTimestamp(),
+        isSuspended: false,
+        reportCount: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        followedBloggerIds: [],
+        favoritedPostIds: [],
+        favoritedConversationIds: [],
+        likedPostIds: [],
+        followersCount: 0,
+        followingCount: 0,
+        postsCount: 0,
+        privacy: {
+          visibility: 'public',
+        },
+      };
+      
+      await db.collection('users').doc(authUser.uid).set(userProfile);
+      
+      createdUsers.push({
+        uid: authUser.uid,
+        username: userData.username,
+        email: userData.email,
+      });
+      
+      console.log(`   ✓ Created user: ${userData.username} (${userData.email})`);
+    } catch (error) {
+      console.error(`   ✗ Error creating user ${userData.username}:`, error);
+    }
+  }
+  
+  return createdUsers;
+}
+
+async function createTestPosts(users: any[]) {
+  console.log('📝 Creating test posts...');
+  
+  let postCount = 0;
+  const createdPostIds: string[] = [];
+  
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    // Each user creates 1-2 posts
+    const numPosts = Math.floor(Math.random() * 2) + 1;
+    
+    for (let j = 0; j < numPosts; j++) {
+      const postContent = SAMPLE_POSTS[postCount % SAMPLE_POSTS.length];
+      
+      const postData = {
+        userId: user.uid,
+        text: postContent,
+        media: [],
+        mediaType: 'text',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'visible',
+        reportCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        favoriteCount: 0,
+        isPublic: true,
+      };
+      
+      const postRef = await db.collection('posts').add(postData);
+      createdPostIds.push(postRef.id);
+      
+      // Update user's post count
+      await db.collection('users').doc(user.uid).update({
+        postsCount: admin.firestore.FieldValue.increment(1),
+      });
+      
+      console.log(`   ✓ Created post by ${user.username}: ${postContent.substring(0, 40)}...`);
+      postCount++;
+    }
+  }
+  
+  console.log(`✅ Created ${postCount} test posts`);
+  return createdPostIds;
+}
+
+async function createTestInteractions(users: any[], postIds: string[]) {
+  console.log('💫 Creating test interactions (likes/favorites)...');
+  
+  // Each user likes 2-3 random posts
+  for (const user of users) {
+    const numLikes = Math.floor(Math.random() * 2) + 2; // 2-3 likes
+    const numFavorites = Math.floor(Math.random() * 2) + 1; // 1-2 favorites
+    
+    // Select random posts to like (avoid duplicates)
+    const postsToLike = [...postIds]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numLikes);
+    
+    const postsToFavorite = [...postIds]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numFavorites);
+    
+    // Create likes
+    for (const postId of postsToLike) {
+      // Create like in post's likes subcollection
+      await db.collection('posts').doc(postId).collection('likes').doc(user.uid).set({
+        likedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      // Create like in user's likes subcollection (for consistency with backend)
+      await db.collection('users').doc(user.uid).collection('likes').doc(postId).set({
+        likedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      // Update post's like count
+      await db.collection('posts').doc(postId).update({
+        likeCount: admin.firestore.FieldValue.increment(1),
+      });
+    }
+    
+    // Create favorites
+    for (const postId of postsToFavorite) {
+      await db.collection('posts').doc(postId).collection('favorites').doc(user.uid).set({
+        favoritedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      await db.collection('users').doc(user.uid).collection('favorites').doc(postId).set({
+        favoritedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      await db.collection('posts').doc(postId).update({
+        favoriteCount: admin.firestore.FieldValue.increment(1),
+      });
+    }
+    
+    // Update user's liked and favorited arrays
+    await db.collection('users').doc(user.uid).update({
+      likedPostIds: postsToLike,
+      favoritedPostIds: postsToFavorite,
+    });
+    
+    console.log(`   ✓ ${user.username}: ${postsToLike.length} likes, ${postsToFavorite.length} favorites`);
+  }
+  
+  console.log('✅ Created test interactions');
+}
+
+async function seed() {
+  try {
+    console.log('🌱 Starting emulator seed...\n');
+    
+    await clearExistingData();
+    const users = await createTestUsers();
+    const postIds = await createTestPosts(users);
+    await createTestInteractions(users, postIds);
+    
+    console.log('\n✨ Seed complete!');
+    console.log(`\n📊 Summary:`);
+    console.log(`   - ${users.length} users created`);
+    console.log(`   - ${postIds.length} posts created`);
+    console.log(`   - Each user has likes and favorites`);
+    console.log(`   - Test credentials: any email above with password "test123456"`);
+    console.log(`   - Example: alice@test.com / test123456\n`);
+    
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Seed failed:', error);
+    process.exit(1);
+  }
+}
+
+seed();

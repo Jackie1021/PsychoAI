@@ -1,0 +1,59 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if file size is within limit
+    function isValidSize(maxSizeMB) {
+      return request.resource.size < maxSizeMB * 1024 * 1024;
+    }
+    
+    // Helper function to check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper function to check if file is a video
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    // User avatars
+    match /avatars/{userId}/{fileName} {
+      // Anyone authenticated can read avatars
+      allow read: if isAuthenticated();
+      
+      // Users can only upload their own avatar
+      // Max size: 5MB, must be an image
+      allow write: if isAuthenticated()
+        && request.auth.uid == userId
+        && isImage()
+        && isValidSize(5);
+    }
+    
+    // Post media (images and videos)
+    match /posts/{postId}/{fileName} {
+      // Anyone authenticated can read post media
+      allow read: if isAuthenticated();
+      
+      // Authenticated users can upload media
+      // Max size: 50MB for videos, 10MB for images
+      allow write: if isAuthenticated()
+        && ((isImage() && isValidSize(10)) || (isVideo() && isValidSize(50)));
+    }
+    
+    // Report evidence
+    match /reports/{reportId}/{fileName} {
+      // Only moderators can read report evidence
+      allow read: if request.auth != null && request.auth.token.role == 'moderator';
+      
+      // Authenticated users can upload evidence
+      // Max size: 10MB
+      allow write: if isAuthenticated() && isValidSize(10);
+    }
+  }
+}
