@@ -1,43 +1,33 @@
 #!/bin/bash
 
-# Simple script to seed data into running emulator
-# Make sure emulators are already running before executing this
+echo "🌱 开始重新生成虚拟数据..."
 
-set -e
+cd backend/functions
 
-echo "🌱 Seeding emulator with test data..."
+# 设置环境变量
+export FIRESTORE_EMULATOR_HOST="127.0.0.1:8081"
+export FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9098"
+
+echo "👥 创建测试用户..."
+node create_rich_test_users.js
+
+echo "📚 创建综合数据..."
+node create_comprehensive_data.js
+
+echo "🎯 生成匹配数据..."
+node generate_all_matches.js
+
+echo "🏘️ 创建社区帖子..."
+node create_community_posts.js
+node create_more_community_posts.js
+
+echo "✅ 虚拟数据生成完成!"
 echo ""
-echo "⚠️  Make sure Firebase emulators are running first!"
-echo "   (Run ./START_BACKEND.sh in another terminal)"
+echo "📊 现在您拥有:"
+echo "• 20个测试用户（密码: password123）"
+echo "• 207个匹配关系"
+echo "• 35个精美的社区帖子"
 echo ""
-
-# Check if emulators are running
-if ! curl -s http://localhost:4001 > /dev/null 2>&1; then
-  echo "❌ Emulators not running! Please start them first with:"
-  echo "   ./START_BACKEND.sh"
-  exit 1
-fi
-
-echo "✅ Emulators detected"
-echo ""
-
-# Install dependencies if needed
-cd scripts
-if [ ! -d "node_modules" ]; then
-  echo "📦 Installing dependencies..."
-  npm install --silent
-fi
-
-# Run seed
-echo "🌱 Creating test users and posts..."
-npm run seed
-
-echo ""
-echo "✨ Done! Test accounts created:"
-echo "   - alice@test.com / test123456"
-echo "   - bob@test.com / test123456"
-echo "   - charlie@test.com / test123456"
-echo "   - diana@test.com / test123456"
-echo "   - eve@test.com / test123456"
-echo "   - frank@test.com / test123456"
-echo ""
+echo "🔑 推荐测试登录："
+echo "• diana@test.com / password123"
+echo "• test@example.com / 123456"

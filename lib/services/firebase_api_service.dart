@@ -14,6 +14,8 @@ import 'package:flutter_app/models/match_report.dart';
 import 'package:flutter_app/models/chat_history_summary.dart';
 import 'package:flutter_app/models/yearly_ai_analysis.dart';
 import 'package:flutter_app/models/conversation.dart';
+import 'package:flutter_app/models/match_profile.dart';
+import 'package:flutter_app/pages/ai_chat_page.dart';
 import 'api_service.dart';
 
 /// Production implementation of [ApiService] that communicates with Firebase backend.
@@ -1773,6 +1775,173 @@ class FirebaseApiService implements ApiService {
       print('✅ Membership cancelled successfully');
     } catch (e) {
       print('❌ Error cancelling membership: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String> sendAiChatMessage(String message, List<ChatMessage> conversationHistory) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      print('🤖 Sending AI chat message...');
+      print('   - User: ${user.uid}');
+      print('   - Message: ${message.substring(0, math.min(50, message.length))}...');
+      
+      // Check VIP access
+      final hasVip = await hasVipAccess(user.uid);
+      if (!hasVip) {
+        throw Exception('VIP membership required for AI chat feature');
+      }
+
+      // Prepare conversation context
+      final conversationContext = conversationHistory.map((msg) => {
+        'role': msg.isUser ? 'user' : 'assistant',
+        'content': msg.text,
+        'timestamp': msg.timestamp.toIso8601String(),
+      }).toList();
+
+      final callable = _functions.httpsCallable('sendAiChatMessage');
+      final result = await callable.call({
+        'message': message,
+        'conversationHistory': conversationContext,
+        'userId': user.uid,
+      });
+
+      final response = result.data['response'] as String;
+      print('✅ AI response received: ${response.substring(0, math.min(50, response.length))}...');
+      
+      return response;
+    } catch (e) {
+      print('❌ Error sending AI chat message: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<MatchProfile>> analyzeChatAndFindMatches(String userId, String conversationText) async {
+    try {
+      print('🔍 Analyzing chat for soulmate matches...');
+      print('   - User: $userId');
+      print('   - Conversation length: ${conversationText.length} chars');
+
+      final callable = _functions.httpsCallable('analyzeChatAndFindMatches');
+      final result = await callable.call({
+        'userId': userId,
+        'conversationText': conversationText,
+      });
+
+      final matchesData = result.data['matches'] as List<dynamic>;
+      final matches = matchesData.map((data) => 
+        MatchProfile.fromFirestore(data as Map<String, dynamic>)
+      ).toList();
+
+      print('✅ Found ${matches.length} soulmate matches based on chat analysis');
+      
+      return matches.cast<MatchProfile>();
+    } catch (e) {
+      print('❌ Error analyzing chat for matches: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> hasVipAccess(String userId) async {
+    try {
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) return false;
+
+      final userData = userDoc.data()!;
+      final membershipTier = userData['membershipTier'] as String?;
+      
+      if (membershipTier == null || membershipTier == 'free') {
+        return false;
+      }
+
+      // Check if membership is still active
+      final expiryTimestamp = userData['membershipExpiry'] as Timestamp?;
+      if (expiryTimestamp == null) return false;
+      
+      final expiryDate = expiryTimestamp.toDate();
+      final isActive = DateTime.now().isBefore(expiryDate);
+      
+      print('🔍 VIP Access Check for $userId:');
+      print('   - Tier: $membershipTier');
+      print('   - Expiry: $expiryDate');
+      print('   - Active: $isActive');
+
+      return isActive;
+    } catch (e) {
+      print('❌ Error checking VIP access: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateUserLearningProfile(String userId, {bool forceRefresh = false}) async {
+    try {
+      print('🧠 Updating user learning profile for $userId...');
+      
+      final callable = _functions.httpsCallable('updateUserLearningProfile');
+      final result = await callable.call({
+        'userId': userId,
+        'forceRefresh': forceRefresh,
+      });
+
+      print('✅ User learning profile updated');
+      return result.data as Map<String, dynamic>;
+    } catch (e) {
+      print('❌ Error updating user learning profile: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getPersonalizedMoodKeywords(String userId, {String? currentContext}) async {
+    try {
+      print('🎯 Getting personalized mood keywords for $userId...');
+      
+      final callable = _functions.httpsCallable('getPersonalizedMoodKeywords');
+      final result = await callable.call({
+        'userId': userId,
+        'currentContext': currentContext,
+      });
+
+      final data = result.data as Map<String, dynamic>;
+      print('✅ Got ${(data['keywords'] as List).length} personalized keywords');
+      return data;
+    } catch (e) {
+      print('❌ Error getting mood keywords: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> saveUserInteraction({
+    required String matchedUserId,
+    required String action,
+    List<String>? keywords,
+    int? score,
+    int? chatDuration,
+    int? chatMessages,
+  }) async {
+    try {
+      print('💾 Saving user interaction: $action with $matchedUserId...');
+      
+      final callable = _functions.httpsCallable('saveUserInteraction');
+      await callable.call({
+        'matchedUserId': matchedUserId,
+        'action': action,
+        'keywords': keywords,
+        'score': score,
+        'chatDuration': chatDuration,
+        'chatMessages': chatMessages,
+      });
+
+      print('✅ User interaction saved for learning');
+    } catch (e) {
+      print('❌ Error saving user interaction: $e');
       rethrow;
     }
   }

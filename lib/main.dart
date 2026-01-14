@@ -32,10 +32,10 @@ void main() async {
   );
     // 🔧 本地开发：连接到 Emulator
   if (kDebugMode) {
-    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8081);
-    FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5002);
-    FirebaseAuth.instance.useAuthEmulator('localhost', 9098);
-    FirebaseStorage.instance.useStorageEmulator('localhost', 9198);
+    FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8081);
+    FirebaseFunctions.instance.useFunctionsEmulator('127.0.0.1', 5002);
+    FirebaseAuth.instance.useAuthEmulator('127.0.0.1', 9098);
+    FirebaseStorage.instance.useStorageEmulator('127.0.0.1', 9198);
   }
 
   await setupLocator(); // Set up the service locator

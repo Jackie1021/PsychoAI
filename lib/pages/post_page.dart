@@ -7,6 +7,7 @@ import 'package:flutter_app/models/post.dart';
 import 'package:flutter_app/models/user_data.dart';
 import 'package:flutter_app/pages/create_post_page.dart';
 import 'package:flutter_app/pages/subscribe_page.dart';
+import 'package:flutter_app/pages/ai_chat_page.dart';
 import 'package:flutter_app/widgets/bottom_nav_bar_visibility_notification.dart';
 import 'package:flutter_app/widgets/post_card.dart';
 import 'package:flutter_app/services/api_service.dart';
@@ -386,49 +387,31 @@ class _PostPageState extends State<PostPage> {
       appBar: AppBar(
         title: const Text('Community'),
         actions: [
-          if (!isPremiumUser)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Free: ${_maxFreeUnlocks - _freeUnlocksUsed}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
+          Row(
+            children: [
+              if (isPremiumUser) 
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: GestureDetector(
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const SubscribePage(),
-                        ),
-                      ).then((result) {
-                        if (result == true) {
-                          _loadCurrentUser();
-                        }
-                      });
+                      if (_currentUser != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AiChatPage(currentUser: _currentUser!),
+                          ),
+                        );
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.amber, Colors.orange],
+                          colors: [Color(0xFF992121), Color(0xFFE6A5A5)],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.amber.withOpacity(0.3),
+                            color: Color(0xFF992121).withOpacity(0.3),
                             blurRadius: 4,
                             offset: Offset(0, 2),
                           ),
@@ -438,13 +421,13 @@ class _PostPageState extends State<PostPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.workspace_premium,
+                            Icons.psychology,
                             size: 16,
                             color: Colors.white,
                           ),
                           const SizedBox(width: 4),
                           const Text(
-                            'Upgrade',
+                            'AI Chat',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white,
@@ -455,10 +438,82 @@ class _PostPageState extends State<PostPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-            ),
+                ),
+              if (!isPremiumUser)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Free: ${_maxFreeUnlocks - _freeUnlocksUsed}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SubscribePage(),
+                            ),
+                          ).then((result) {
+                            if (result == true) {
+                              _loadCurrentUser();
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.amber, Colors.orange],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.workspace_premium,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Upgrade',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
       body: SingleChildScrollView(

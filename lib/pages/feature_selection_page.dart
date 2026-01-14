@@ -10,12 +10,20 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/up_down_button.dart';
 import '../services/service_locator.dart';
 import '../services/api_service.dart';
+import '../models/user_data.dart';
 import 'canvas_drawing_page.dart';
 import 'match_result_page.dart';
 import 'matching_thinking_page.dart';
 
 class FeatureSelectionPage extends StatefulWidget {
-  const FeatureSelectionPage({super.key});
+  final List<String>? moodKeywords;
+  final UserData? currentUser;
+  
+  const FeatureSelectionPage({
+    super.key,
+    this.moodKeywords,
+    this.currentUser,
+  });
 
   @override
   State<FeatureSelectionPage> createState() => _FeatureSelectionPageState();

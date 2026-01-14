@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_app/pages/feature_selection_page.dart';
 import 'package:flutter_app/pages/match_result_page.dart';
+import 'package:flutter_app/pages/mood_selection_page.dart';
 import 'package:flutter_app/models/post.dart';
+import 'package:flutter_app/models/user_data.dart';
 import 'package:flutter_app/pages/post_page.dart';
 import 'package:flutter_app/pages/profile_page.dart';
 import 'package:flutter_app/widgets/bottom_nav_bar_visibility_notification.dart';
 import 'package:flutter_app/widgets/change_tab_notification.dart';
 import 'package:flutter_app/widgets/up_down_button.dart';
+import 'package:flutter_app/services/api_service.dart';
+import 'package:flutter_app/services/service_locator.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +24,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isNavBarVisible = true;
+  final ApiService _apiService = locator<ApiService>();
+  UserData? _currentUser;
 
   final List<Widget> _pages = [
     const PostPage(),
@@ -28,9 +35,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showFeatureSelectionPage();
     });
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userData = await _apiService.getUser(user.uid);
+        setState(() {
+          _currentUser = userData;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading current user: $e');
+    }
   }
 
   void _showFeatureSelectionPage() {
@@ -47,7 +69,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onMatchButtonTapped() {
-    _showFeatureSelectionPage();
+    if (_currentUser != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => MoodSelectionPage(currentUser: _currentUser!),
+        fullscreenDialog: true,
+      ));
+    } else {
+      _showFeatureSelectionPage(); // Fallback
+    }
   }
 
   @override

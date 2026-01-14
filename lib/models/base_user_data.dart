@@ -5,6 +5,7 @@ import 'dart:typed_data';
 class BaseUserData {
   final String uid;
   final String username;
+  final String? email;
   final List<String> traits;
   final String freeText;
   final List<String> followedBloggerIds;
@@ -18,6 +19,7 @@ class BaseUserData {
   BaseUserData({
     required this.uid,
     required this.username,
+    this.email,
     this.traits = const [],
     this.freeText = '',
     this.followedBloggerIds = const [],
@@ -32,6 +34,7 @@ class BaseUserData {
   factory BaseUserData.fromJson(Map<String, dynamic> json) => BaseUserData(
         uid: json["uid"],
         username: json["username"],
+        email: json["email"],
         traits: List<String>.from(
             (json["traits"] ?? const <String>[]).map((x) => x)),
         freeText: json["freeText"] ?? '',
@@ -52,6 +55,7 @@ class BaseUserData {
   Map<String, dynamic> toJson() => {
         "uid": uid,
         "username": username,
+        "email": email,
         "traits": List<dynamic>.from(traits.map((x) => x)),
         "freeText": freeText,
         "followedBloggerIds":

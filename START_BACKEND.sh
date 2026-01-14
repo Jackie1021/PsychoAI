@@ -32,5 +32,13 @@ echo ""
 echo "等待 'All emulators ready!' 消息..."
 echo ""
 cd /Users/chenjiaqi/Desktop/Business_idea/3_terminal/flutter_app-origin-shiwen
-firebase emulators:start --only=auth,firestore,storage,functions
+
+# 检查是否有导出的数据，如果有则导入
+if [ -d "./emulator-data" ]; then
+  echo "📂 发现已导出的数据，正在导入..."
+  firebase emulators:start --only=auth,firestore,storage,functions --import=./emulator-data --export-on-exit=./emulator-data
+else
+  echo "📂 没有发现已导出的数据，启动全新模拟器..."
+  firebase emulators:start --only=auth,firestore,storage,functions --export-on-exit=./emulator-data
+fi
 

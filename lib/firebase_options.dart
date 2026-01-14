@@ -53,17 +53,17 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyCcPTbG_DKgMV9kI56MFrHhsPQ77GWo-_g',
     appId: '1:170748311325:web:70868e38678341165bd3f4',
     messagingSenderId: '170748311325',
-    projectId: 'studio-291983403-af613',
-    authDomain: 'studio-291983403-af613.firebaseapp.com',
-    storageBucket: 'studio-291983403-af613.firebasestorage.app',
+    projectId: 'psycho-dating-app',
+    authDomain: 'psycho-dating-app.firebaseapp.com',
+    storageBucket: 'psycho-dating-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCcPTbG_DKgMV9kI56MFrHhsPQ77GWo-_g',
     appId: '1:170748311325:ios:70868e38678341165bd3f4', 
     messagingSenderId: '170748311325',
-    projectId: 'studio-291983403-af613',
-    storageBucket: 'studio-291983403-af613.firebasestorage.app',
+    projectId: 'psycho-dating-app',
+    storageBucket: 'psycho-dating-app.firebasestorage.app',
     iosBundleId: 'com.example.flutterApp',
   );
 }

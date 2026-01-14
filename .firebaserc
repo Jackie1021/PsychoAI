@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "studio-291983403-af613"
-  }
+    "default": "psycho-dating-app"
+  },
+  "targets": {},
+  "etags": {}
 }

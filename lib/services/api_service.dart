@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_app/models/match_analysis.dart';
+import 'package:flutter_app/models/match_profile.dart';
 import 'package:flutter_app/models/user_data.dart';
 import 'package:flutter_app/models/post.dart';
 import 'package:flutter_app/models/comment.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_app/models/match_record.dart';
 import 'package:flutter_app/models/match_report.dart';
 import 'package:flutter_app/models/chat_history_summary.dart';
 import 'package:flutter_app/models/yearly_ai_analysis.dart';
+import 'package:flutter_app/pages/ai_chat_page.dart';
 
 /// Defines the contract for all data operations in the app.
 /// This abstract class can be implemented by a fake local service for debugging
@@ -185,6 +187,31 @@ abstract class ApiService {
 
   /// Cancels user membership.
   Future<void> cancelMembership();
+
+  /// Sends a message to AI chat and gets response (VIP feature)
+  Future<String> sendAiChatMessage(String message, List<ChatMessage> conversationHistory);
+
+  /// Analyzes chat conversation and finds soulmate matches
+  Future<List<MatchProfile>> analyzeChatAndFindMatches(String userId, String conversationText);
+
+  /// Checks if user has VIP access to AI chat
+  Future<bool> hasVipAccess(String userId);
+
+  /// Updates user learning profile based on interaction history
+  Future<Map<String, dynamic>> updateUserLearningProfile(String userId, {bool forceRefresh = false});
+
+  /// Gets personalized mood keywords for user
+  Future<Map<String, dynamic>> getPersonalizedMoodKeywords(String userId, {String? currentContext});
+
+  /// Saves user interaction for learning purposes
+  Future<void> saveUserInteraction({
+    required String matchedUserId,
+    required String action,
+    List<String>? keywords,
+    int? score,
+    int? chatDuration,
+    int? chatMessages,
+  });
 
   // Future<void> saveConversation(Conversation conversation);
   // Future<List<Conversation>> getConversations(String uid);
